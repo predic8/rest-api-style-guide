@@ -1,14 +1,18 @@
-# API Styleguide für REST-artige Schnittstellen
+# REST API Styleguide
 
 Version: 0.2
 
+# Einführung
+
+Der Guide soll keine API oder REST Einführung ersetzen sondern konkrete Hinweise für die wichtigsten Design-Entscheidungen liefern. Für das Verständnis sind grundlegende REST Kenntnisse notwendig.
+
 ## Ziele 
-- Kompaktes Dokument mit den wichtigsten Punkten 
+- Beschränkung auf die wichtigsten Punkte 
 - Beachtung der REST Prinzipien soweit sinnvoll ader nicht dogmatisch
 - Beispiele anstatt formeller Beschreibungen
-- Soll keine API oder REST Einführung sein. Für das Verständnis sind grundlegende REST Kenntnisse notwendig.
 
-# 
+## Reife-Modell
+
 Im [Richardson Maturity Model](https://en.wikipedia.org/wiki/Richardson_Maturity_Model) sind die Level 0 bis 2 einzuhalten.
 
 |Level|Beschreibung|Pflicht|
@@ -24,7 +28,7 @@ Im [Richardson Maturity Model](https://en.wikipedia.org/wiki/Richardson_Maturity
 
 ## Ressourcen und Pfade 
 
-Das Anlegen, Ändern, Abfragen und Löschen (CRUD) von Daten soll über Ressourcen erfolgen. Für Prozesse und Berechnungen kann vom Konzept der Ressourcen abgewichen werden und statt dessen Funktionen verwendet werden. 
+Das Anlegen, Ändern, Abfragen und Löschen (CRUD) von Daten soll über Ressourcen erfolgen. Für Prozesse und Berechnungen kann vom Konzept der Ressourcen abgewichen werden und statt dessen Funktionen (Verben) verwendet werden. 
 
 
 Für Pfade dürfen die folgenden Zeichen verwendet werden:
@@ -54,20 +58,27 @@ Der Basispfad wird allen Aufrufen vorangestellt.
 
 ### Versionierung
 
-Die Angabe einer Versionsnummer im Pfad ist optional. Versionsnummern sind Ganzzahlen. 
+Die Angabe einer Versionsnummer im Pfad ist optional. Versionsnummern sind Ganzzahlen.
 
 
 **Beispiel:**
 
-    http:predic8.de/api/v2/
+    http://predic8.de/api/shop/v2/
+
+### Ressourcen
+
+Jedes Geschäftsobjekt, das über die Schnittstelle angesprochen werden kann muss über einen eindeutigen Pfad adressierbar sein. Das Geschäftsobjekt ist als Ressource zu behandeln. Der Pfad, die URI ist der Name der Ressource. Der Name muss einem Hauptwort ensprechen.
 
 **Regeln:**
-- Plural
-- Subressourcen
-    - Level
-- Version
-    - Optional für Version 1
+- Pfade sind Hauptwörter
 
+Subressourcen können gebildet werden.
+
+**Beispiele:**
+
+    https://api.predic8.de/shop/products/42/photo
+    https://api.predic8.de/shop/vendors/672/products/
+    https://api.predic8.de/partner/112358/vertraege/7
 
 
 ### Einzel Ressourcen
@@ -77,6 +88,7 @@ Die Angabe einer Versionsnummer im Pfad ist optional. Versionsnummern sind Ganzz
 
 ### Filtern und Sortieren
 
+?sort-by=
 
 ### Paginating - Blättern
 
@@ -86,53 +98,64 @@ Die Angabe einer Versionsnummer im Pfad ist optional. Versionsnummern sind Ganzz
 
 ## Methoden
 
+Das Design sollte sich möglichst auf wenige Methoden wie GET, POST, PUT und DELETE beschränken. Bei bestimmten Anwendungsfällen kann es Sinn machen zusätzlich PATCH anzubieten. 
 
-### Verbtabelle
+|Methode|CRUD|Beschreibung|
+|---|---|---|
+|GET|Lesen||
+|POST|Neuanlegen|Wurde erfolgreich eine neue Ressource angelegt, muss die Response einen *Location* Header enthalten, der auf die neue Ressource verweist.|
+|PUT|Ändern|Die gesamte Ressource wird mit dem Inhalt des Requestbodies ersetzt.|
+|DELETE|Löschen||
+|PATCH|Teiländerung|Es wird nur ein Teil z.B. einzelne Felder geändert.|
 
-CRUD
 
-
-
+### Verbtabelle - CRUD Pattern
+Der Life-Cycle von Ressourcen kann wie in der Tabelle beschrieben verändert werden.
 
 ||Lesen|Erzeugen|Ändern|Löschen|
 |---|---|---|---|---|
 |Methode|GET|POST|PUT|DELETE|
-|Einzel<br>/produkt/|Lesen der Liste|Erzeugen eines Produktes|Fehler: Status Code 405|Fehler: Status Code 405|
+|Einzel<br>/produkte/|Lesen der Liste|Erzeugen eines Produktes|Fehler: Status Code 405|Fehler: Status Code 405|
 |Liste<br>/produkt/{pid}|Lesen eines Objektes|Fehler: Status 405|Ändern eines Produktes|Löschen eines Produktes|
 
-	
-/produkte/	Liste der Produkte	Anlegen eines Produktes		
-/produkte/{pid}	Einzelnes Produkt mit der id pid	405		
 
+# Responses - Antworten
 
-Kein Patch
+## Status Codes
 
-- 201 / Location Header
-
-
-# Responses
-
-Status Codes
+Für die Rückmeldung an den Client sind die HTTP Status Codes zu verwenden. Der Server-Code sollte sich auf die Verwendung der folgenden Status Codes beschränken. Von der Verwendung von exotischen und selten verwendeten Status Codes ist abzusehen.  
 
 |Code|||
 |---|---|---|
 |200|OK||
 |201|Created|Mit dem Aufruf wurde eine neue Ressource erzeugt.|
-|202|
-|400|||
-|401|Unauthorized||
+|202|Accepted
+|400|Bad Request||
 |404|Not found||
-|405|||
-|500|||
+|500|Internal Server Error||
 
+Die verwendeten Server, API Gateways, Bibliotheken und Frameworks können darüberhinaus weitere Status Codes wie die folgenden verwenden:
 
+307, 401, 403, 405, 502, ...
 
+## Fehlerbehandlung
 
+Fehler bei der Verarbeitung auf dem Server müssen dem Client mit HTTP Status Codes mitgeteilt werden.
+
+### Fehlerbeschreibung im Body (Optional)
+
+Eine Fehlerbeschreibung im Body ist optional und kann weitere Informationen zum Fehler liefern. Eine Fehlerbeschreibung kann im Zielkonflikt mit Sicherheitsanforderungen stehen.
+
+**Beispiel:**
+    {
+        "code": 400
+        "message": "...."
+    }
 
 
 # Datenformate
 
-Für strukturierte Daten sollte JSON verwendet werden. Es können aber auch andere Formate verwendet werden. 
+Generell kann jedes Datenformat verwendet werden. Für strukturierte Daten wie Produktinformationen, Rechnungen oder Tickets sollte JSON verwendet werden. Es können aber auch andere Formate zum Einsatz kommen. 
 
 Die Angabe des *Content-Type Headers* ist Pflicht.
 
@@ -146,40 +169,30 @@ Die Angabe des *Content-Type Headers* ist Pflicht.
 In JSON, XML oder anderen Formaten muss eine einheitliche Schreibweise für Elemente oder Feldnamen verwendet werden.
 
 
-
-## Fehlerbehandlung
-
-Fehler bei der Verarbeitung auf dem Server müssen dem Client mit HTTP Status Codes mitgeteilt werden.
-
-### Fehlerbeschreibung im Body (Optional)
-
-Eine Fehlerbeschreibung im Body ist optional und kann weitere Informationen zum Fehler liefern. Eine Fehlerbeschreibung kann im Zielkonflickt mit Sicherheitsanforderungen stehen.
-
-**Beispiel:**
-    {
-        "code": 400
-        "message": "...."
-    }
-
-
 # Hypermedia und Links
 
-Die Verwendung von Hypermedia ist optional. 
+Die Verwendung von Hypermedia ist optional. Hypermedia ist ein interessantes und zentrales Konzept von REST. Leider wurde Hypermedia von der 
 
 ## Link ohne Metadata
 
-
+Für Links ohne Metadaten können einfache Felder verwendet werden. 
 
 **Beispiel:**
 
     {
-        "id": 
-        "hersteller_uri": /45
+        "id": 31415
+        "hersteller_uri": "https://api.predic8.de/mm/hersteller/45
         "hersteller_id: 45
     }
 
+**Best Practice:**
+
+- Neben dem Link kann zusätzlich eine Id zurückgegeben werden, damit Client Entwickler, die keine Hypermedia Links verfolgen die URIs nicht parsen müssen. 
+
+
 ## Link mit Metadata
 
+Ein Link kann zusätzlich mit Metadata versehen werden. Dafür sollte möglichst auf ein vorhandenes Format wie *JSON API* oder *Hypertext Application Language(HAL)* zurückgegriffen werden.
 
 
 **Beispiel:**
