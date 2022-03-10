@@ -177,8 +177,8 @@ Daten auf dem Server können wie in der Tabelle beschrieben gelesen und verände
 ||Lesen|Erzeugen|Ändern|Löschen|
 |---|---|---|---|---|
 |Methode|GET|POST|PUT|DELETE|
-|Einzel<br>/produkte/|Lesen der Liste|Erzeugen eines Produktes|Fehler: Status Code 405|Fehler: Status Code 405|
-|Liste<br>/produkt/{pid}|Lesen eines Objektes|Fehler: Status 405|Ändern eines Produktes|Löschen eines Produktes|
+|Liste<br>/produkte/|Lesen der Liste|Erzeugen eines Produktes|Fehler: Status Code 405|Fehler: Status Code 405|
+|Einzel<br>/produkt/{pid}|Lesen eines Objektes|Fehler: Status 405|Ändern eines Produktes|Löschen eines Produktes|
 
 
 # Responses - Antworten
@@ -209,6 +209,7 @@ Fehler bei der Verarbeitung auf dem Server müssen dem Client HTTP Status Codes 
 Eine Fehlerbeschreibung im Body ist optional und kann weitere Informationen zum Fehler liefern. Eine Fehlerbeschreibung kann im Zielkonflikt mit Sicherheitsanforderungen stehen.
 
 **Beispiel:**
+
     {
         "code": 400
         "message": "...."
