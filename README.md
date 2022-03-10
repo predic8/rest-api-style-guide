@@ -1,6 +1,6 @@
 # REST API Styleguide
 
-Version: 0.2
+Version: 0.3
 
 # Einführung
 
@@ -8,8 +8,17 @@ Der Guide soll keine API oder REST Einführung ersetzen sondern konkrete Hinweis
 
 ## Ziele 
 - Beschränkung auf die wichtigsten Punkte 
-- Beachtung der REST Prinzipien soweit sinnvoll ader nicht dogmatisch
-- Beispiele anstatt formeller Beschreibungen
+- Beachtung der REST Prinzipien soweit sinnvoll
+- Der Guide soll ein nichtdogmatischer Leitfaden darstellen
+- Anschauliche Beispiele anstatt formeller Beschreibungen bereitstellen
+
+Es wird vorausgesetzt, dass die Regeln der HTTP Spezifikation eingehalten werden.
+
+## Abweichung vom Style-Guide
+
+Dieser Guide ist als Richtschnur gedacht. Die einzelnen Punkte sind vielmehr Empfehlungen als verbindliche Regelen. Die Einhaltung soll zu einem guten Design und zur Einheitlichkeit von APIs beitragen.
+
+Es ist möglich und gewollt, dass von diesem Guide Forks erzeugt werden, die individuell angepaßt werden.
 
 ## Reife-Modell
 
@@ -17,7 +26,7 @@ Im [Richardson Maturity Model](https://en.wikipedia.org/wiki/Richardson_Maturity
 
 |Level|Beschreibung|Pflicht|
 |---|---|---|
-|0|JSON, XML, ... Format|ja|
+|0|JSON, XML oder anderes selbstgeschreibendes Format|ja|
 |1|Ressourcen|ja|
 |2|HTTP Verben |ja|
 |3|Hypermedia Steuerung|optional|
@@ -35,7 +44,7 @@ Für Pfade dürfen die folgenden Zeichen verwendet werden:
 
 |Zeichen|Beschreibung|
 |---|---|
-|Kleinbuchstaden|a,b,c ... z||
+|Buchstaben|a,b,c ... z, A,B,C ... Z||
 |Ziffern|0..9|
 |Sonderzeichen| - / ? = , . _
 
@@ -67,12 +76,14 @@ Die Angabe einer Versionsnummer im Pfad ist optional. Versionsnummern sind Ganzz
 
 ### Ressourcen
 
-Jedes Geschäftsobjekt, das über die Schnittstelle angesprochen werden kann muss über einen eindeutigen Pfad adressierbar sein. Das Geschäftsobjekt ist als Ressource zu behandeln. Der Pfad, die URI ist der Name der Ressource. Der Name muss einem Hauptwort ensprechen.
+Jedes Geschäftsobjekt, das über die Schnittstelle angesprochen werden kann, muss über einen eindeutigen Pfad adressierbar sein. Das Geschäftsobjekt ist als Ressource zu behandeln. Der Pfad ist der Name der Ressource und muss einem Hauptwort ensprechen.
+
+Für den Pfad sollten möglichst keine Großbuchstaben verwendet werden. Im Querystring, dem Anteil hinter dem Fragezeichen können Großbuchstaben dagegen verwendet werden.
 
 **Regeln:**
 - Pfade sind Hauptwörter
-
-Subressourcen können gebildet werden.
+- Subressourcen sollten nicht tiefer als drei Ebenen gehen
+- Verwendung von Kleinbuchstaben
 
 **Beispiele:**
 
@@ -83,34 +94,85 @@ Subressourcen können gebildet werden.
 
 ### Einzel Ressourcen
 
+Mit einer Einzel-Ressource wird ein einzelnes Geschäftsobjekt abgebildet.
+
+**Beispiele:**
+
+    /products/{id}
+
+
 ### Listen Ressourcen
 
+Eine Listen-Ressource bildet eine Liste von gleichartigen Geschäftsobjekten ab. 
 
-### Filtern und Sortieren
+**Regeln:**
 
-?sort-by=
+- Am Ende einer Listen-Ressource steht der Schrägstrich **/**.
+
+**Beispiele:**
+
+    /products/
+    /customers/
+
+
+### Filtern und Sortieren 
+
+Mit Parametern im Querystring kann Einfluss auf die Repäsentation einer Listen-Ressource genommen werden.
+
+**Beispiele:**
+
+    ?sort-by=preis&sort-order=asc
+    ?stadt=Bonn
 
 ### Paginating - Blättern
 
+Paginating kann über den Querystring realisiert werden.
 
-    ...?start=100&max=10
+**Beispiele:**
+
+    ?max=10&start=30
+
+
+### Formate
+
+Als Alternative zu einer Formatangabe über den **Accept** Header kann ein gewünschtes Format auch über einen Query-Parameter angegeben werden. 
+
+**Beispiele:**
+
+    ?format=JSON
+    ?format=PDF
+
+
+## Übersicht Parameter
+
+Die Tabelle zeigt wie verschiedene Parameter übertragen werden können.
+
+|Parameter|Zweck|Beispiele|
+|---|---|---|
+|Pfad|Teil einer Einzel-Ressource|/produkte/7|
+|Query String|Filter, Sortierung|?stadt=bonn|
+|Header|Technische Metadaten wie Security-Tokens, Rate Limiting, ...|X-RateLimit|
+|Payload|Eigentliche Nutzdaten, Geschäftsobjekte|{ "name": "Herbert" }|
+
 
 
 ## Methoden
 
-Das Design sollte sich möglichst auf wenige Methoden wie GET, POST, PUT und DELETE beschränken. Bei bestimmten Anwendungsfällen kann es Sinn machen zusätzlich PATCH anzubieten. 
+Das Design sollte sich möglichst auf wenige Methoden wie *GET*, *POST*, *PUT* und *DELETE* beschränken. Bei bestimmten Anwendungsfällen kann es Sinn machen, zusätzlich *PATCH* anzubieten. 
 
 |Methode|CRUD|Beschreibung|
 |---|---|---|
-|GET|Lesen||
-|POST|Neuanlegen|Wurde erfolgreich eine neue Ressource angelegt, muss die Response einen *Location* Header enthalten, der auf die neue Ressource verweist.|
+|GET|Lesen|Daten auf dem Server werden nicht verändert|
+|POST|Neuanlege|Wurde erfolgreich eine neue Ressource angelegt, muss das die Response mit dem Status Code *202* kenntlich machen und einen *Location*-Header enthalten, der auf die neue Ressource verweist.|
 |PUT|Ändern|Die gesamte Ressource wird mit dem Inhalt des Requestbodies ersetzt.|
-|DELETE|Löschen||
+|DELETE|Löschen|Die Ressource wird gelöscht|
 |PATCH|Teiländerung|Es wird nur ein Teil z.B. einzelne Felder geändert.|
 
 
-### Verbtabelle - CRUD Pattern
-Der Life-Cycle von Ressourcen kann wie in der Tabelle beschrieben verändert werden.
+
+### Verbtabelle - *CRUD* Pattern
+
+Daten auf dem Server können wie in der Tabelle beschrieben gelesen und verändert werden.
 
 ||Lesen|Erzeugen|Ändern|Löschen|
 |---|---|---|---|---|
@@ -127,20 +189,20 @@ Für die Rückmeldung an den Client sind die HTTP Status Codes zu verwenden. Der
 
 |Code|||
 |---|---|---|
-|200|OK||
+|200|OK|Der Aufruf war erfolgreich|
 |201|Created|Mit dem Aufruf wurde eine neue Ressource erzeugt.|
-|202|Accepted
-|400|Bad Request||
-|404|Not found||
-|500|Internal Server Error||
+|202|Accepted|Der Aufruf wurde erfolgreich entgegengenommen. Die eigentliche Verarbeitung findet aber erst später statt|
+|400|Bad Request|Die Anfrage ist fehlerhaft|
+|404|Not found|Die Ressource konnte nicht gefunden werden bzw. das Geschäftsobjekt existiert nicht.|
+|500|Internal Server Error|Bei der Verarbeitung auf dem Server ist ein Problem aufbetreten.|
 
 Die verwendeten Server, API Gateways, Bibliotheken und Frameworks können darüberhinaus weitere Status Codes wie die folgenden verwenden:
 
-307, 401, 403, 405, 502, ...
+307, 401, 403, 405, 422, 502, ...
 
 ## Fehlerbehandlung
 
-Fehler bei der Verarbeitung auf dem Server müssen dem Client mit HTTP Status Codes mitgeteilt werden.
+Fehler bei der Verarbeitung auf dem Server müssen dem Client HTTP Status Codes mitgeteilt werden.
 
 ### Fehlerbeschreibung im Body (Optional)
 
