@@ -1,6 +1,6 @@
 # REST API Styleguide
 
-Version: 0.3
+Version: 0.4
 
 # Einführung
 
